@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "PQJ+u2ZEE/8=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\jakub.maka\\OneDrive - ELIS\\Dokumenty\\GitHub\\Project_1\\API_Program.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jakub.maka\\.nuget\\packages\\bouncycastle.cryptography\\2.4.0\\bouncycastle.cryptography.2.4.0.nupkg.sha512",
+    "C:\\Users\\jakub.maka\\.nuget\\packages\\mailkit\\4.7.1.1\\mailkit.4.7.1.1.nupkg.sha512",
+    "C:\\Users\\jakub.maka\\.nuget\\packages\\mimekit\\4.7.1\\mimekit.4.7.1.nupkg.sha512",
+    "C:\\Users\\jakub.maka\\.nuget\\packages\\system.formats.asn1\\8.0.1\\system.formats.asn1.8.0.1.nupkg.sha512",
+    "C:\\Users\\jakub.maka\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.0\\system.security.cryptography.pkcs.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
