@@ -40,3 +40,5 @@ C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\obj\Debug\net8.0\
 C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\obj\Debug\net8.0\API_Program.pdb
 C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\obj\Debug\net8.0\API_Program.genruntimeconfig.cache
 C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\obj\Debug\net8.0\ref\API_Program.dll
+C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\obj\Debug\net8.0\API_Program.sourcelink.json
+C:\Users\jakub.maka\OneDrive - ELIS\Dokumenty\GitHub\Project_1\bin\Debug\net8.0\Newtonsoft.Json.dll
