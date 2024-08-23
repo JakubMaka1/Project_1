@@ -8,20 +8,36 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Org.BouncyCastle.Tls;
 using Newtonsoft.Json.Linq;
+using System.Runtime.CompilerServices;
 
-class Program
+namespace PROJECT_1
 {
+ class Program
+ {
     static async Task Main(string[] args)
     {
-          Console.WriteLine($"Program rozpoczął działanie. {DateTime.Now}");
-        // Pobieranie danych logowania ze zmiennych środowiskowych
+        
+        Logger.ReadLastSystemLog("Program działał przez");
+        //wyjscie z programu CRL + C, uznawane jako zamkniecie wiec stoper się zatrzyma
+        ProgramRuntime programRuntime = new ProgramRuntime();
+
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true; // Zapobieganie natychmiastowemu zamknięciu programu
+            programRuntime.StopAndDisplayRuntime();
+            Environment.Exit(0); // Zamknięcie programu
+        };
+
+        //    Console.WriteLine($"Program rozpoczął działanie.");
+        //    Logger.WriteSystemLog($"Program rozpoczął działanie.");
+        // Pobieranie danych logowania ze zmiennych środowiskowych testowy email z @interia.pl
         string email = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
         string password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
         if (email == null || password == null)
         {
-            Console.WriteLine("Email or password environment variable is not set.");
+            Logger.WriteEmailLog("Email or password environment variable is not set.");
         }
-        else
+        //else
         //{
         //    Console.WriteLine($"EMAIL_ADDRESS: {email}");
         //    Console.WriteLine($"EMAIL_PASSWORD: {password}");
@@ -36,15 +52,11 @@ class Program
                 await client.AuthenticateAsync(email, password);
                 // Otwórz folder INBOX
                 var inbox = client.Inbox;
-                await inbox.OpenAsync(FolderAccess.ReadWrite);
-                // Zapamiętaj początkową liczbę wiadomości
-                int previousMessageCount = inbox.Count;
+                await inbox.OpenAsync(FolderAccess.ReadWrite);              
                 var cancellationTokenSource = new CancellationTokenSource();
-                // Pobierz nową wiadomość
-                    var newest_message = await inbox.GetMessageAsync(inbox.Count - 1);
-                     Console.WriteLine($"Najnowsza wiadomość to: {newest_message.Subject}");
-                     Console.WriteLine("");
+                     
                      Console.WriteLine("Monitoring folderu INBOX...");
+                     Logger.WriteSystemLog("Monitoring folderu INBOX...");
 
                 while (!cancellationTokenSource.Token.IsCancellationRequested)
                 {
@@ -54,47 +66,40 @@ class Program
                     // Szuka ID nieprzeczytanych wiadomości
                     var uids = await inbox.SearchAsync(SearchQuery.NotSeen); 
                     
-                    // Sprawdź, czy liczba wiadomości wzrosła
-                    if (inbox.Count > previousMessageCount)
-                    {
                         foreach (var uid in uids)
                         {
                           // Wylistowanie nieprzeczytanych wiadomości
                           var message = await inbox.GetMessageAsync(uid);
+                          
                           Console.WriteLine($"Odebrano wiadomość: {message.Subject}");
-                         
-                          if (message.Subject.Contains("STOP", StringComparison.OrdinalIgnoreCase))
+                          Logger.WriteEmailLog($"Odebrano wiadomość: {message.Subject}");
+
+                         if (message.Subject.Contains("disable", StringComparison.OrdinalIgnoreCase))
                             {
                                 string jsonData = "{ \"status\": \"disable\" }";
 
-                                Console.WriteLine($"Odebrano wiadomość: {message.Date} {uid}");  
                                 // Wykonanie zapytania PUT
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
                                 await SendGETRequest();
                             }
-                            
-                            
-                            if (message.Subject.Contains("START", StringComparison.OrdinalIgnoreCase))
+                         if (message.Subject.Contains("enable", StringComparison.OrdinalIgnoreCase))
                             {
                                 string jsonData = "{ \"status\": \"enable\" }";
 
-                                Console.WriteLine($"Odebrano wiadomość: {message.Date} {uid}");  
                                 // Wykonanie zapytania PUT
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
                                 await SendGETRequest();
                             } 
 
-
-                            // Po przetworzeniu wiadomości możesz ją oznaczyć jako przeczytaną
+                         // Po przetworzeniu wiadomości możesz ją oznaczyć jako przeczytaną
                          await inbox.AddFlagsAsync(uid, MessageFlags.Seen, true);
-                         previousMessageCount = inbox.Count;
+                                                  
                         }
-                    // Sprawdzenie co 10 sekund
-                    await Task.Delay(10000, cancellationTokenSource.Token);
-                    }
-                    
+                     // Sprawdzenie co 10 sekund
+                     await Task.Delay(10000, cancellationTokenSource.Token);
+                                        
                 }
 
                  // Rozłącz się z serwerem IMAP
@@ -103,13 +108,20 @@ class Program
             catch (OperationCanceledException)
             {
                 Console.WriteLine("Operacja anulowana.");
+                Logger.WriteEmailLog("Operacja anulowana.");
+                programRuntime.StopAndDisplayRuntime();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Wystąpił błąd: {ex.Message}");
+                Logger.WriteEmailLog($"Wystąpił błąd: {ex.Message}");
+                programRuntime.StopAndDisplayRuntime();
             }
            
         }    
+        
+        programRuntime.StopAndDisplayRuntime();
+
     }
 
     private static async Task SendPutRequest(string jsonData)
@@ -121,15 +133,16 @@ class Program
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine("Dane zostały pomyślnie zaktualizowane na serwerze.");
+                    Console.WriteLine("Operacja aktualizacji statusu udana.");
+                    Logger.WriteEmailLog("Operacja aktualizacji statusu udana.");
                 }
                 else
                 {
                     Console.WriteLine($"Wystąpił błąd: {response.StatusCode}");
+                    Logger.WriteEmailLog($"Wystąpił błąd: {response.StatusCode}");
                 }
             }
         }
-    
     private static async Task SendGETRequest()
         {
             using (var httpClient = new HttpClient())
@@ -143,14 +156,11 @@ class Program
                             if ((int)result["policyid"] == 3)
                             {
                                 // Wyświetlanie statusu
-                                Console.WriteLine($"Nazwa policy: {result["name"]}");
-                                Console.WriteLine($"Status dla policy z id 3: {result["status"]}");
-                                Console.WriteLine($"Data zmiany statusu: {DateTime.Now}");
+                                Logger.WriteEmailLog($"Nazwa policy: {result["name"]}");
+                                Logger.WriteEmailLog($"Aktualny status: {result["status"]} ");                                
                             }
                         }
             }
         }
+ }
 }
-
-
-                    
