@@ -8,4 +8,4 @@ Sprawdzana skrzynka @interia.pl ze względu na brak wymaganego OAuth
 
 to-do: 
 * Autoryzacja 0Auth dla np IMAP gmail
-* Powiadomienia email o wylaczeniu się programu/error
+* Powiadomienia email o wylaczeniu się programu/error 
