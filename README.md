@@ -2,6 +2,8 @@ Do zainstlowania MailKit [do IMAP-u] oraz Newtonsoft.Json.Linq [Do przeglądania
 
 Aktualnie poświadczenia w zmiennych środowiskowych
 
+Fortigate zainstalowany jako lokalny VM wersja evaluate 
+
 Logi na dysku C:\Temp
 
 Sprawdzana skrzynka @interia.pl ze względu na brak wymaganego OAuth
