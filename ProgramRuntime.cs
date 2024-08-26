@@ -3,7 +3,7 @@ using System.Diagnostics;
 using MailKit.Net.Imap;
 using MailKit;
 using MimeKit;
-using PROJECT_1;
+namespace API_Program;
 
 class ProgramRuntime
 {
@@ -20,5 +20,6 @@ class ProgramRuntime
         stopwatch.Stop();
         TimeSpan runtime = stopwatch.Elapsed;
         Logger.WriteSystemLog($"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
+        SMTP.SendEmail("Przerwa w działaniu",$"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
     }
 }

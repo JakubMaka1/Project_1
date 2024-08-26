@@ -9,14 +9,14 @@ using System.Diagnostics;
 using Org.BouncyCastle.Tls;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 
-namespace PROJECT_1
-{
+namespace API_Program;
+
  class Program
  {
-    static async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        
         Logger.ReadLastSystemLog("Program działał przez");
         //wyjscie z programu CRL + C, uznawane jako zamkniecie wiec stoper się zatrzyma
         ProgramRuntime programRuntime = new ProgramRuntime();
@@ -30,6 +30,7 @@ namespace PROJECT_1
 
         //    Console.WriteLine($"Program rozpoczął działanie.");
         //    Logger.WriteSystemLog($"Program rozpoczął działanie.");
+
         // Pobieranie danych logowania ze zmiennych środowiskowych testowy email z @interia.pl
         string email = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
         string password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
@@ -68,20 +69,24 @@ namespace PROJECT_1
                     
                         foreach (var uid in uids)
                         {
+                          Logger.CleanOldLogs();//usuwa starsze niz 1 dzien z logów
                           // Wylistowanie nieprzeczytanych wiadomości
                           var message = await inbox.GetMessageAsync(uid);
                           
                           Console.WriteLine($"Odebrano wiadomość: {message.Subject}");
                           Logger.WriteEmailLog($"Odebrano wiadomość: {message.Subject}");
+                          
 
                          if (message.Subject.Contains("disable", StringComparison.OrdinalIgnoreCase))
                             {
                                 string jsonData = "{ \"status\": \"disable\" }";
 
                                 // Wykonanie zapytania PUT
+                                
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
                                 await SendGETRequest();
+                                
                             }
                          if (message.Subject.Contains("enable", StringComparison.OrdinalIgnoreCase))
                             {
@@ -104,6 +109,7 @@ namespace PROJECT_1
 
                  // Rozłącz się z serwerem IMAP
                  await client.DisconnectAsync(true);
+                 
             }
             catch (OperationCanceledException)
             {
@@ -117,11 +123,10 @@ namespace PROJECT_1
                 Logger.WriteEmailLog($"Wystąpił błąd: {ex.Message}");
                 programRuntime.StopAndDisplayRuntime();
             }
-           
         }    
         
         programRuntime.StopAndDisplayRuntime();
-
+       
     }
 
     private static async Task SendPutRequest(string jsonData)
@@ -163,4 +168,3 @@ namespace PROJECT_1
             }
         }
  }
-}
