@@ -7,9 +7,10 @@ Fortigate zainstalowany jako lokalny VM wersja evaluate
 Logi na dysku C:\Temp
 
 Sprawdzana skrzynka @interia.pl ze względu na brak wymaganego OAuth
+ - Update: Działa gmail po dodaniu kodu aplikacji
 
 to-do: 
-* Autoryzacja 0Auth dla np IMAP gmail
-✔️ Powiadomienia email o wylaczeniu się programu/error 
-* Odświezanie się pliku Log po np 10tys zostawienie 5tys najbardizej aktualnych
-* 
+✔️ Autoryzacja dla IMAP gmail - Utworzenie kodu aplikacji w ustawieniach gmail
+✔️ Powiadomienia email o wylaczeniu się programu/error i ile działał 
+✔️ Odświezanie się pliku LogEmail po X dniach po otrzymaniu wiadomości
+✔️ Powiadomienie jak długo program był wyłączony
