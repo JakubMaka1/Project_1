@@ -13,23 +13,17 @@ namespace API_Program;
 
 
     public class Logger
-    {
-        private static readonly string dateFormat = "dd.MM.yyyy HH:mm:ss";
-
+    {        
         public static void WriteEmailLog(string message)
         {
-            string logPath = "C:/Temp/EmailLog.txt";
-
-            using(StreamWriter writer = new StreamWriter(logPath, true, Encoding.UTF8))
+            using(StreamWriter writer = new StreamWriter(GlobalsVariables.logEmailPath, true, Encoding.UTF8))
             {
                 writer.WriteLine($"{DateTime.Now} :{message}");
             }
         }
         public static void WriteSystemLog(string message)
         {
-            string logPath = "C:/Temp/SystemLog.txt";
-
-            using(StreamWriter writer = new StreamWriter(logPath,true , Encoding.UTF8))
+            using(StreamWriter writer = new StreamWriter(GlobalsVariables.logSystemPath,true , Encoding.UTF8))
             {
                 writer.WriteLine($"{DateTime.Now} :{message}");
             }
@@ -37,9 +31,7 @@ namespace API_Program;
 
         public static void ReadSystemLog(string word)
         {
-            string logPath = "C:/Temp/SystemLog.txt";
-
-           var lines = File.ReadAllLines(logPath);
+           var lines = File.ReadAllLines(GlobalsVariables.logSystemPath);
 
                 // Filtracja linii zawierających jakieś słowo 
                
@@ -55,28 +47,21 @@ namespace API_Program;
 
         public static void ReadLastSystemLog(string word)
         {
-                string logPath = "C:/Temp/SystemLog.txt";
-
-                var lines = File.ReadAllLines(logPath);
+                var lines = File.ReadAllLines(GlobalsVariables.logSystemPath);
 
                 // Filtracja linii zawierających jakieś słowo 
                
                 var lastLine = lines.Where(line => line.Contains(word, StringComparison.OrdinalIgnoreCase)).LastOrDefault();
                 if (lastLine != null)
                 {
-                    WriteEmailLog($"Ostatnie wyłaczenie się programu: {lastLine}");
-                }
-                else
-                {
-                    WriteEmailLog("Nie znaleziono linii zawierających słowo.");
+                    WriteSystemLog($"Ostatnie wyłaczenie się programu: {lastLine}");
                 }
         }
 
         public static void CleanOldLogs()
         {
-            string logPath = "C:/Temp/EmailLog.txt"; 
             // Odczytanie wszystkich linii z pliku logów
-            string[] logLines = File.ReadAllLines(logPath);
+            string[] logLines = File.ReadAllLines(GlobalsVariables.logEmailPath);
 
             // Obliczanie daty granicznej (1 dzień temu)
             DateTime thresholdDate = DateTime.Now.AddDays(-1);
@@ -89,7 +74,7 @@ namespace API_Program;
                 string timeString = line.Substring(11, 8); // `HH:mm:ss`
                 string dateTimeString = $"{dateString} {timeString}";
 
-                if (DateTime.TryParseExact(dateTimeString, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime logDate))
+                if (DateTime.TryParseExact(dateTimeString, GlobalsVariables.dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime logDate))
                 {
                     return logDate >= thresholdDate;
                 }
@@ -97,7 +82,32 @@ namespace API_Program;
                 }).ToArray(); // Konwersja do tablicy
 
             // Zapisanie przefiltrowanych linii do pliku logów
-            File.WriteAllLines(logPath, filteredLogLines);
+            File.WriteAllLines(GlobalsVariables.logEmailPath, filteredLogLines);
+        }
+        public static void CompareDate()
+        {
+            
+            // Odczytanie wszystkich linii z pliku logów
+            string[] logLines = File.ReadAllLines(GlobalsVariables.logSystemPath);
+            if (logLines.Length < 2)
+        {
+            Console.WriteLine("Tablica nie zawiera wystarczającej liczby elementów do porównania.");
+            SMTP.SendEmail("Problem z plikiem SystemLog","Brak przynajmniej 2 wpisów w pliku");
+        }
+        
+
+            // Zapisanie przefiltrowanych linii do pliku logów do ustawienia w zalożeności ile logów ustawiło się na starcie
+            string ostatniLine = logLines[logLines.Length - 1];
+            string przedostatniLine = logLines[logLines.Length - 2];
+            
+            DateTime ostatniDateTime = DateTime.ParseExact(ostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
+            DateTime przedostatniDateTime = DateTime.ParseExact(przedostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
+
+            // Obliczanie różnicy czasu
+            TimeSpan timeDifference = ostatniDateTime - przedostatniDateTime;
+
+            WriteSystemLog($"Program był wyłączony przez {timeDifference.Days} dni, {timeDifference.Hours} godzin, {timeDifference.Minutes} minut, {timeDifference.Seconds} sekund");
+
         }
 
 }

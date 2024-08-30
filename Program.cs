@@ -1,7 +1,7 @@
 ﻿using MailKit.Net.Imap;
 using MailKit.Search;
 using MailKit;
-using System;
+using MailKit.Security;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,12 +12,25 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 
 namespace API_Program;
-
+public static class GlobalsVariables
+{
+    // Pobieranie danych logowania ze zmiennych środowiskowych
+    // Program.cs i SMTP.cs
+    public static string email = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
+    public static string password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+    public static string appPassword = Environment.GetEnvironmentVariable("KodAplikacji");
+    // Logger.cs
+    public static string logEmailPath = "C:/Temp/EmailLog.txt";
+    public static string logSystemPath = "C:/Temp/SystemLog.txt";
+    public static string dateFormat = "dd.MM.yyyy HH:mm:ss";
+}
  class Program
  {
+    
     public static async Task Main(string[] args)
-    {
-        Logger.ReadLastSystemLog("Program działał przez");
+    {       
+        Logger.CompareDate();
+        
         //wyjscie z programu CRL + C, uznawane jako zamkniecie wiec stoper się zatrzyma
         ProgramRuntime programRuntime = new ProgramRuntime();
 
@@ -25,32 +38,23 @@ namespace API_Program;
         {
             e.Cancel = true; // Zapobieganie natychmiastowemu zamknięciu programu
             programRuntime.StopAndDisplayRuntime();
+            
             Environment.Exit(0); // Zamknięcie programu
         };
 
-        //    Console.WriteLine($"Program rozpoczął działanie.");
-        //    Logger.WriteSystemLog($"Program rozpoczął działanie.");
-
-        // Pobieranie danych logowania ze zmiennych środowiskowych testowy email z @interia.pl
-        string email = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
-        string password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
-        if (email == null || password == null)
+        if (GlobalsVariables.email == null || GlobalsVariables.appPassword == null)
         {
             Logger.WriteEmailLog("Email or password environment variable is not set.");
         }
-        //else
-        //{
-        //    Console.WriteLine($"EMAIL_ADDRESS: {email}");
-        //    Console.WriteLine($"EMAIL_PASSWORD: {password}");
-        //}
+
         using (var client = new ImapClient())
         {
             try
             {
                 // Połącz się z serwerem IMAP
-                await client.ConnectAsync("poczta.interia.pl", 993, true);
+                await client.ConnectAsync("imap.gmail.com", 993, SecureSocketOptions.SslOnConnect);
                 // Zaloguj się na konto e-mail
-                await client.AuthenticateAsync(email, password);
+                await client.AuthenticateAsync(GlobalsVariables.email, GlobalsVariables.appPassword);
                 // Otwórz folder INBOX
                 var inbox = client.Inbox;
                 await inbox.OpenAsync(FolderAccess.ReadWrite);              
@@ -81,8 +85,7 @@ namespace API_Program;
                             {
                                 string jsonData = "{ \"status\": \"disable\" }";
 
-                                // Wykonanie zapytania PUT
-                                
+                                // Wykonanie zapytania PUT                                
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
                                 await SendGETRequest();
@@ -114,19 +117,16 @@ namespace API_Program;
             catch (OperationCanceledException)
             {
                 Console.WriteLine("Operacja anulowana.");
-                Logger.WriteEmailLog("Operacja anulowana.");
-                programRuntime.StopAndDisplayRuntime();
+                Logger.WriteSystemLog("Operacja anulowana.");
+                programRuntime.ErrorStopAndDisplayRuntime("Operacja anulowana");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Wystąpił błąd: {ex.Message}");
-                Logger.WriteEmailLog($"Wystąpił błąd: {ex.Message}");
-                programRuntime.StopAndDisplayRuntime();
+                Logger.WriteSystemLog($"Wystąpił błąd: {ex.Message}");
+                programRuntime.ErrorStopAndDisplayRuntime(ex.Message);                
             }
-        }    
-        
-        programRuntime.StopAndDisplayRuntime();
-       
+        }           
     }
 
     private static async Task SendPutRequest(string jsonData)
@@ -139,12 +139,15 @@ namespace API_Program;
                 if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine("Operacja aktualizacji statusu udana.");
-                    Logger.WriteEmailLog("Operacja aktualizacji statusu udana.");
+                    Logger.WriteSystemLog("Operacja aktualizacji statusu udana.");                    
                 }
                 else
                 {
                     Console.WriteLine($"Wystąpił błąd: {response.StatusCode}");
-                    Logger.WriteEmailLog($"Wystąpił błąd: {response.StatusCode}");
+                    Logger.WriteSystemLog($"Wystąpił błąd: {response.StatusCode}");
+                    string error = response.StatusCode.ToString();
+                    ProgramRuntime programRuntime = new ProgramRuntime();
+                    programRuntime.ErrorStopAndDisplayRuntime(error);
                 }
             }
         }
@@ -162,7 +165,9 @@ namespace API_Program;
                             {
                                 // Wyświetlanie statusu
                                 Logger.WriteEmailLog($"Nazwa policy: {result["name"]}");
-                                Logger.WriteEmailLog($"Aktualny status: {result["status"]} ");                                
+                                Logger.WriteEmailLog($"Aktualny status: {result["status"]} ");    
+                                Logger.WriteSystemLog($"Nazwa policy: {result["name"]}");
+                                Logger.WriteSystemLog($"Aktualny status: {result["status"]} ");                              
                             }
                         }
             }

@@ -3,11 +3,12 @@ using System.Diagnostics;
 using MailKit.Net.Imap;
 using MailKit;
 using MimeKit;
+using System.Security.Cryptography.X509Certificates;
 namespace API_Program;
 
 class ProgramRuntime
 {
-    private Stopwatch stopwatch;
+    public Stopwatch stopwatch;
 
     public ProgramRuntime()
     {
@@ -20,6 +21,15 @@ class ProgramRuntime
         stopwatch.Stop();
         TimeSpan runtime = stopwatch.Elapsed;
         Logger.WriteSystemLog($"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
-        SMTP.SendEmail("Przerwa w działaniu",$"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
-    }
+        SMTP.SendEmail("Program przestał działać", $"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
+        }
+
+    public void ErrorStopAndDisplayRuntime(string error)
+    {
+        stopwatch.Stop();
+        TimeSpan runtime = stopwatch.Elapsed;
+        Logger.WriteSystemLog($"Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
+        SMTP.SendEmail("Awaria programu", $"{error}, Program działał przez: {runtime.Hours} godz {runtime.Minutes} min {runtime.Seconds} sek {runtime.Milliseconds} ms");
+        
+        }
 }
