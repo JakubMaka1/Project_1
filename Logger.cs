@@ -92,19 +92,21 @@ namespace API_Program;
             if (logLines.Length < 2)
         {
             Console.WriteLine("Tablica nie zawiera wystarczającej liczby elementów do porównania.");
-            return;
+            SMTP.SendEmail("Problem z plikiem SystemLog","Brak przynajmniej 2 wpisów w pliku");
         }
+        
 
             // Zapisanie przefiltrowanych linii do pliku logów do ustawienia w zalożeności ile logów ustawiło się na starcie
             string ostatniLine = logLines[logLines.Length - 1];
-            string przedostatniLine = logLines[logLines.Length - 3];
+            string przedostatniLine = logLines[logLines.Length - 2];
+            
             DateTime ostatniDateTime = DateTime.ParseExact(ostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
             DateTime przedostatniDateTime = DateTime.ParseExact(przedostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
 
             // Obliczanie różnicy czasu
             TimeSpan timeDifference = ostatniDateTime - przedostatniDateTime;
 
-            WriteSystemLog($"Program był wyłączony przez {timeDifference}");
+            WriteSystemLog($"Program był wyłączony przez {timeDifference.Days} dni, {timeDifference.Hours} godzin, {timeDifference.Minutes} minut, {timeDifference.Seconds} sekund");
 
         }
 
