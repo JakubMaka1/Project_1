@@ -14,3 +14,4 @@ to-do:
 ✔️ Powiadomienia email o wylaczeniu się programu/error i ile działał 
 ✔️ Odświezanie się pliku LogEmail po X dniach po otrzymaniu wiadomości
 ✔️ Powiadomienie jak długo program był wyłączony
+ Dodanie wykonywania kilku policy z pliku tekstowego

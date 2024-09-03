@@ -29,22 +29,6 @@ namespace API_Program;
             }
         }
 
-        public static void ReadSystemLog(string word)
-        {
-           var lines = File.ReadAllLines(GlobalsVariables.logSystemPath);
-
-                // Filtracja linii zawierających jakieś słowo 
-               
-                var filteredLines = lines.Where(line => line.Contains(word, StringComparison.OrdinalIgnoreCase));
-
-                // Wyświetlenie wyników w konsoli
-                Console.WriteLine($"Linie zawierające słowo: ${word}");
-                foreach (var line in filteredLines)
-                {
-                    Console.WriteLine(line);
-                }
-        }
-
         public static void ReadLastSystemLog(string word)
         {
                 var lines = File.ReadAllLines(GlobalsVariables.logSystemPath);
@@ -94,17 +78,13 @@ namespace API_Program;
             Console.WriteLine("Tablica nie zawiera wystarczającej liczby elementów do porównania.");
             SMTP.SendEmail("Problem z plikiem SystemLog","Brak przynajmniej 2 wpisów w pliku");
         }
-        
-
             // Zapisanie przefiltrowanych linii do pliku logów do ustawienia w zalożeności ile logów ustawiło się na starcie
-            string ostatniLine = logLines[logLines.Length - 1];
-            string przedostatniLine = logLines[logLines.Length - 2];
-            
+            string ostatniLine = logLines[logLines.Length-1];
+                        
             DateTime ostatniDateTime = DateTime.ParseExact(ostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
-            DateTime przedostatniDateTime = DateTime.ParseExact(przedostatniLine.Substring(0, 19), GlobalsVariables.dateFormat, CultureInfo.InvariantCulture);
-
+            
             // Obliczanie różnicy czasu
-            TimeSpan timeDifference = ostatniDateTime - przedostatniDateTime;
+            TimeSpan timeDifference = DateTime.Now - ostatniDateTime;
 
             WriteSystemLog($"Program był wyłączony przez {timeDifference.Days} dni, {timeDifference.Hours} godzin, {timeDifference.Minutes} minut, {timeDifference.Seconds} sekund");
 

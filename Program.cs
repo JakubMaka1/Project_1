@@ -22,6 +22,7 @@ public static class GlobalsVariables
     // Logger.cs
     public static string logEmailPath = "C:/Temp/EmailLog.txt";
     public static string logSystemPath = "C:/Temp/SystemLog.txt";
+    public static string filePolicyPath = "C:/Temp/Policy.txt";
     public static string dateFormat = "dd.MM.yyyy HH:mm:ss";
 }
  class Program
@@ -30,7 +31,7 @@ public static class GlobalsVariables
     public static async Task Main(string[] args)
     {       
         Logger.CompareDate();
-        
+                
         //wyjscie z programu CRL + C, uznawane jako zamkniecie wiec stoper się zatrzyma
         ProgramRuntime programRuntime = new ProgramRuntime();
 
@@ -84,7 +85,7 @@ public static class GlobalsVariables
                          if (message.Subject.Contains("disable", StringComparison.OrdinalIgnoreCase))
                             {
                                 string jsonData = "{ \"status\": \"disable\" }";
-
+                                
                                 // Wykonanie zapytania PUT                                
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
@@ -94,7 +95,7 @@ public static class GlobalsVariables
                          if (message.Subject.Contains("enable", StringComparison.OrdinalIgnoreCase))
                             {
                                 string jsonData = "{ \"status\": \"enable\" }";
-
+                                
                                 // Wykonanie zapytania PUT
                                 await SendPutRequest(jsonData);
                                 // Wykonanie zapytania GET
@@ -127,27 +128,36 @@ public static class GlobalsVariables
                 programRuntime.ErrorStopAndDisplayRuntime(ex.Message);                
             }
         }           
+     
     }
 
-    private static async Task SendPutRequest(string jsonData)
+    private static async Task SendPutRequest( string jsonData)
         {
             using (var httpClient = new HttpClient())
             {
-                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                var response = await httpClient.PutAsync("http://10.10.10.4/api/v2/cmdb/firewall/policy/3/?access_token=gtjmQkf4s1kQwQ9yd3nhmfxx39ykb9", content);
-
-                if (response.IsSuccessStatusCode)
+                // Odczyt pliku
+                string[] policyLines = File.ReadAllLines(GlobalsVariables.filePolicyPath);
+                   
+                foreach (var policy in policyLines)
                 {
-                    Console.WriteLine("Operacja aktualizacji statusu udana.");
-                    Logger.WriteSystemLog("Operacja aktualizacji statusu udana.");                    
-                }
-                else
-                {
-                    Console.WriteLine($"Wystąpił błąd: {response.StatusCode}");
-                    Logger.WriteSystemLog($"Wystąpił błąd: {response.StatusCode}");
-                    string error = response.StatusCode.ToString();
-                    ProgramRuntime programRuntime = new ProgramRuntime();
-                    programRuntime.ErrorStopAndDisplayRuntime(error);
+                        Console.WriteLine(policy);
+                    
+                        var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                        var response = await httpClient.PutAsync($"http://10.10.10.4/api/v2/cmdb/firewall/policy/{policy}/?access_token=gtjmQkf4s1kQwQ9yd3nhmfxx39ykb9", content);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Operacja aktualizacji statusu udana.");
+                        Logger.WriteSystemLog("Operacja aktualizacji statusu udana.");                    
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Wystąpił błąd: {response.StatusCode}");
+                        Logger.WriteSystemLog($"Wystąpił błąd: {response.StatusCode}");
+                        string error = response.StatusCode.ToString();
+                        ProgramRuntime programRuntime = new ProgramRuntime();
+                        programRuntime.ErrorStopAndDisplayRuntime(error);
+                    }
                 }
             }
         }
@@ -155,21 +165,38 @@ public static class GlobalsVariables
         {
             using (var httpClient = new HttpClient())
             {
-                
-                HttpResponseMessage response = await httpClient.GetAsync("http://10.10.10.4/api/v2/cmdb/firewall/policy/3?access_token=gtjmQkf4s1kQwQ9yd3nhmfxx39ykb9");
+                string[] policyLines = File.ReadAllLines(GlobalsVariables.filePolicyPath);
+                foreach (string policy in policyLines)
+                {
+                HttpResponseMessage response = await httpClient.GetAsync($"http://10.10.10.4/api/v2/cmdb/firewall/policy/{policy}?access_token=gtjmQkf4s1kQwQ9yd3nhmfxx39ykb9");
                 string json = await response.Content.ReadAsStringAsync();
                 JObject jsonObject = JObject.Parse(json);
+                
                      foreach (var result in jsonObject["results"])
                         {
-                            if ((int)result["policyid"] == 3)
-                            {
-                                // Wyświetlanie statusu
-                                Logger.WriteEmailLog($"Nazwa policy: {result["name"]}");
-                                Logger.WriteEmailLog($"Aktualny status: {result["status"]} ");    
-                                Logger.WriteSystemLog($"Nazwa policy: {result["name"]}");
-                                Logger.WriteSystemLog($"Aktualny status: {result["status"]} ");                              
-                            }
+                             if ((string)result["policyid"] == policy)
+                                {
+                                    // Wyświetlanie statusu
+                                    Logger.WriteEmailLog($"Nazwa policy: {result["name"]}");
+                                    Logger.WriteEmailLog($"Aktualny status: {result["status"]} ");    
+                                    Logger.WriteSystemLog($"Nazwa policy: {result["name"]}");
+                                    Logger.WriteSystemLog($"Aktualny status: {result["status"]} ");                              
+                                }
+                            
                         }
+                }
             }
+        }
+
+    public static void ReadPolicyFile()
+        {
+                // Filtracja linii zawierających jakieś słowo 
+                string[] policyLines = File.ReadAllLines(GlobalsVariables.filePolicyPath);
+    
+                // Wyświetlenie wyników w konsoli
+                foreach (var line in policyLines)
+                {
+                    Console.WriteLine(line);
+                }
         }
  }
